@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 5000;
 
@@ -42,6 +42,35 @@ async function run() {
 
       const result = await carCollection.insertOne(newCar);
       res.send(result);
+    });
+
+    // Read all
+
+    app.get("/carRental", async (req, res) => {
+      const cursor = carCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // car details
+
+    app.get("/carRental/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log("id", id);
+
+        const query = { _id: new ObjectId(id) };
+
+        const review = await carCollection.findOne(query);
+
+        if (review) {
+          return res.send(review);
+        }
+        res.status(404).send({ message: "Review not found" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
     });
 
     // Send a ping to confirm a successful connection
