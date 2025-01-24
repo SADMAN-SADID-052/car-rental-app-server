@@ -33,6 +33,7 @@ async function run() {
     // await client.connect();
 
     const carCollection = client.db("carrentalDB").collection("carRental");
+    const bookinglistCollection= client.db("carrentalDB").collection("bookinglist");
 
 
     // post add car
@@ -72,6 +73,49 @@ async function run() {
         res.status(500).send({ message: "Internal Server Error" });
       }
     });
+
+    // Add to Booking list
+
+    app.post("/bookinglist", async (req, res) => {
+      try {
+        const {
+          carModel,
+          carImage,
+          rentalPrice,
+  
+          addedBy,
+        } = req.body;
+
+        if (
+          !carModel ||
+          !carImage ||
+          !rentalPrice ||
+           
+          !addedBy
+        ) {
+          return res.status(400).send({ message: "Missing required fields" });
+        }
+
+        const bookingslistItem = {
+          carModel,
+          carImage,
+          rentalPrice,
+       
+
+          addedBy,
+          addedAt: new Date(),
+        };
+
+        const result = await bookinglistCollection.insertOne(bookingslistItem);
+        res
+          .status(201)
+          .send({ success: true, data: result, message: "Added to BookingList" });
+      } catch (error) {
+        console.error("Error adding to bookinglist:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
