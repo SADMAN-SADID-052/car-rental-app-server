@@ -82,6 +82,7 @@ async function run() {
           carModel,
           carImage,
           rentalPrice,
+          status,
   
           addedBy,
         } = req.body;
@@ -90,6 +91,7 @@ async function run() {
           !carModel ||
           !carImage ||
           !rentalPrice ||
+        
            
           !addedBy
         ) {
@@ -100,9 +102,7 @@ async function run() {
           carModel,
           carImage,
           rentalPrice,
-       
-
-          addedBy,
+           addedBy,
           addedAt: new Date(),
         };
 
@@ -115,6 +115,45 @@ async function run() {
         res.status(500).send({ message: "Internal Server Error" });
       }
     });
+
+
+    //get Booking list
+
+    app.get("/bookinglist", async (req, res) => {
+      try {
+        const userEmail = req.query.email; // Email of the logged-in user
+        if (!userEmail) {
+          return res.status(400).send({ message: "User email is required" });
+        }
+    
+        // Find booking list items where addedBy.email matches the user's email
+        const bookingslistItems = await bookinglistCollection
+          .find({ "addedBy.email": userEmail })
+          .toArray();
+    
+        // Add dynamic status field to each booking
+        const updatedBookingsList = bookingslistItems.map((item) => {
+          const currentDate = new Date();
+          const bookingDate = new Date(item.addedAt); // Assuming `addedAt` stores the booking date
+          
+          let status = "Pending"; // Default status
+          if (item.isCanceled) {
+            status = "Canceled";
+          } else if (bookingDate < currentDate) {
+            status = "Confirmed";
+          } 
+    
+          return { ...item, status }; // Include the calculated status
+        });
+    
+        res.status(200).send({ success: true, data: updatedBookingsList });
+      } catch (error) {
+        console.error("Error fetching booking list:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
+    
+
 
 
     // Send a ping to confirm a successful connection
