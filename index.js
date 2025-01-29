@@ -196,6 +196,22 @@ app.put("/carRental/:id", async (req, res) => {
   }
 });
 
+// delete my car
+app.delete("/carRental/:id", async (req, res) => {
+  const carId = req.params.id; 
+  try {
+    const result = await carCollection.deleteOne({ _id: new ObjectId(carId) });
+
+    if (result.deletedCount === 1) {
+      res.status(200).send({ success: true, message: "Car deleted successfully!" });
+    } else {
+      res.status(404).send({ success: false, message: "Car not found!" });
+    }
+  } catch (error) {
+    console.error("Error deleting car:", error);
+    res.status(500).send({ success: false, message: "Failed to delete car." });
+  }
+});
 
 
 // DELETE: Cancel a booking
