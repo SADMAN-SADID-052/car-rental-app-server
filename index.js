@@ -40,6 +40,7 @@ async function run() {
     app.post("/carRental", async (req, res) => {
       const newCar = req.body;
       console.log(newCar);
+      newCar.addedAt = new Date().toISOString();
 
       const result = await carCollection.insertOne(newCar);
       res.send(result);
@@ -152,7 +153,115 @@ async function run() {
         res.status(500).send({ message: "Internal Server Error" });
       }
     });
-    
+
+       //  My Cars
+       app.get("/carRental", async (req, res) => {
+        try {
+          const userEmail = req.query.email;
+          if (!userEmail) {
+            return res.status(400).send({ message: "User email is required" });
+          }
+  
+          const userCars = await carCollection
+            .find({ email: userEmail })
+            .toArray();
+          res.send(userCars);
+        } catch (error) {
+          console.log("Error fetching user Cars:", error);
+          res.status(500).send({ message: "Internal Server Error" });
+        }
+      });
+  
+
+/**
+     * Update a car by ID
+     */
+app.put("/carRental/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+    const result = await carCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).send({ message: "Car not found or no changes made" });
+    }
+
+    res.status(200).send({ success: true, message: "Car updated successfully" });
+  } catch (error) {
+    console.error("Error updating car:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+
+
+// DELETE: Cancel a booking
+app.delete("/bookinglist/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await bookinglistCollection.deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount > 0) {
+      res.status(200).send({ success: true, message: "Booking canceled." });
+    } else {
+      res.status(404).send({ success: false, message: "Booking not found." });
+    }
+  } catch (error) {
+    console.error("Error canceling booking:", error);
+    res.status(500).send({ success: false, message: "Failed to cancel booking." });
+  }
+});
+
+// PATCH: Modify a booking date
+app.patch("/modifybooking/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { date } = req.body;
+    if (!date) {
+      return res.status(400).send({ success: false, message: "Date is required." });
+    }
+
+    const result = await bookinglistCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { date: new Date(date) } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).send({ success: true, message: "Booking date updated." });
+    } else {
+      res.status(404).send({ success: false, message: "Booking not found." });
+    }
+  } catch (error) {
+    console.error("Error updating booking date:", error);
+    res.status(500).send({ success: false, message: "Failed to update booking date." });
+  }
+});
+
+
+app.get("/carRental", async (req, res) => {
+  const { page = 1, limit = 3 } = req.query; // Defaults to page 1, limit 3
+  const skip = (page - 1) * limit;
+
+  try {
+    if (!carCollection) {
+      return res.status(500).send({ success: false, message: "Database not connected." });
+    }
+
+    const recentCars = await carCollection
+      .find()
+      .sort({ createdAt: -1 }) // Sort by most recently added
+      .skip(skip) // Skip previous pages
+      .limit(parseInt(limit)) // Limit to cars per page
+      .toArray();
+
+    res.status(200).send({ success: true, data: recentCars });
+  } catch (error) {
+    console.error("Error fetching recent listings at /carRental:", error.message, error.stack);
+    res.status(500).send({ success: false, message: "Failed to fetch recent listings." });
+  }
+});
 
 
 
