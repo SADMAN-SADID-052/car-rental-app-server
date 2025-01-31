@@ -128,16 +128,16 @@ async function run() {
         // Add dynamic status field to each booking
         const updatedBookingsList = bookingslistItems.map((item) => {
           const currentDate = new Date();
-          const bookingDate = new Date(item.addedAt); // Assuming `addedAt` stores the booking date
+          const bookingDate = new Date(item.addedAt); 
 
-          let status = "Pending"; // Default status
+          let status = "Pending";
           if (item.isCanceled) {
             status = "Canceled";
           } else if (bookingDate < currentDate) {
             status = "Confirmed";
           }
 
-          return { ...item, status }; // Include the calculated status
+          return { ...item, status }; 
         });
 
         res.status(200).send({ success: true, data: updatedBookingsList });
@@ -305,7 +305,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
