@@ -238,7 +238,7 @@ async function run() {
     });
 
     // PATCH: Modify a booking date
-    app.patch("/modifybooking/:id", async (req, res) => {
+    app.patch("/bookinglist/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const { date } = req.body;
